@@ -13,6 +13,7 @@ public class BrakePads : MonoBehaviour
     public float innerPadTravel = 0.003f;   // tune this in Play mode
     public float outerPadTravel = 0.003f;   // tune this in Play mode
     public float padMoveSpeed = 0.05f;
+    public bool forceBrake = false; // set externally by ButtonChecker
 
     float outerDelay = 0.5f;
     float brakeHeldTimer = 0f;
@@ -28,7 +29,7 @@ public class BrakePads : MonoBehaviour
 
     void Update()
     {
-        bool brakeHeld = Input.GetKey(KeyCode.DownArrow);
+        bool brakeHeld = Input.GetKey(KeyCode.DownArrow) || forceBrake;
 
         if (brakeHeld)
         {
