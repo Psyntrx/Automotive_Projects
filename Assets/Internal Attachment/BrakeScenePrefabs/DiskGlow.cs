@@ -7,17 +7,17 @@ public class DiskGlow : MonoBehaviour
     public Renderer diskRenderer;
 
     [Header("Glow")]
-    public float maxGlowDuration = 3f;    // seconds to reach full red at max speed
+    public float maxGlowDuration = 3f;
     public float glowIntensity = 3f;
-    public float coolDownSpeed = 1.5f;
+    public float coolDownSpeed = 0.3f;   // lower = longer decay (try 0.1 - 0.5)
 
     public Color colorYellow = new Color(1f, 0.92f, 0f);
     public Color colorOrange = new Color(1f, 0.45f, 0f);
     public Color colorRed = new Color(1f, 0.05f, 0f);
 
     float _glowT = 0f;
-    float _glowRate = 0f;    // how fast _glowT climbs — set when outer engages
-    bool _wasOuterActive = false; // tracks the moment outer pad first engages
+    float _glowRate = 0f;
+    bool _wasOuterActive = false;
 
     MaterialPropertyBlock _mpb;
     static readonly int EmissionID = Shader.PropertyToID("_EmissionColor");
@@ -30,34 +30,31 @@ public class DiskGlow : MonoBehaviour
     void Update()
     {
         bool outerActive = disk.outerEngaged;
-        bool discSpinning = disk.speedKmh > 0f;
-
-        // Detect the exact moment outer pad engages — snapshot actual speed then
-        if (outerActive && !_wasOuterActive)
-        {
-            // speedRatio: 1.0 at max speed, lower at lower speeds
-            // this makes _glowRate faster at high speed, slower at low speed
-            float speedRatio = disk.speedKmh / disk.maxSpeed;
-            _glowRate = speedRatio / maxGlowDuration;
-        }
-
-        _wasOuterActive = outerActive;
+        bool discSpinning = disk.currentSpeedKmh > 0f;  // use actual rotation speed
 
         if (outerActive && discSpinning)
         {
-            // Climb at the rate set by actual speed — fast stops from high speed heat more
+            // Snapshot rate the moment outer pad first engages
+            if (!_wasOuterActive)
+            {
+                float speedRatio = disk.currentSpeedKmh / disk.maxSpeed;
+                _glowRate = speedRatio / maxGlowDuration;
+            }
+
+            // Heat up only while disk is physically spinning
             _glowT += _glowRate * Time.deltaTime;
         }
-        else
+        else if (_glowT > 0f)
         {
-            // Disc stopped or brake released — cool down from wherever we are
+            // Disk stopped or brake released — decay
             _glowT -= Time.deltaTime * coolDownSpeed;
             _glowRate = 0f;
         }
 
+        _wasOuterActive = outerActive && discSpinning;
+
         _glowT = Mathf.Clamp01(_glowT);
 
-        // Seamless yellow → orange → red
         Color glowColor;
         if (_glowT < 0.5f)
             glowColor = Color.Lerp(colorYellow, colorOrange, _glowT * 2f);
