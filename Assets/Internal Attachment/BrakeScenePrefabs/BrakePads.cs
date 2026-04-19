@@ -15,7 +15,7 @@ public class BrakePads : MonoBehaviour
     public float padMoveSpeed = 0.05f;
     public bool forceBrake = false; // set externally by ButtonChecker
 
-    float outerDelay = 0.5f;
+    float outerDelay = 0.05f;
     float brakeHeldTimer = 0f;
 
     Vector3 innerStartPos;
